@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: branchwork
+Version: 0.1.0
+Summary: Grasshopper/Rhino plugin for irregular and bifurcated branch analysis using COMPAS.
+License: MIT
+Keywords: grasshopper,rhino,compas,branches,centerline,mesh
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: compas>=2.0
+Requires-Dist: numpy>=1.21
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+
+# forkwork
+plugin for grasshopper to work with irregular and bifurcated branches

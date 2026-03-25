@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/branchwork/__init__.py
+src/branchwork/branch_analysis.py
+src/branchwork/centerline.py
+src/branchwork/mesh_utils.py
+src/branchwork/skeleton.py
+src/branchwork.egg-info/PKG-INFO
+src/branchwork.egg-info/SOURCES.txt
+src/branchwork.egg-info/dependency_links.txt
+src/branchwork.egg-info/requires.txt
+src/branchwork.egg-info/top_level.txt
