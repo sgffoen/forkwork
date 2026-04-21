@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from typing import List, Optional, Tuple
 
+from compas.datastructures import Graph
 from compas.geometry import (
     oriented_bounding_box_numpy,
     Box,

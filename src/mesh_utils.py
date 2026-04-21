@@ -27,6 +27,9 @@ from compas.geometry import (
     centroid_points,
     oriented_bounding_box_numpy,
     Box,
+    Transformation,
+    Translation,
+    Rotation,
 )
 
 
@@ -74,7 +77,54 @@ def principal_axes(mesh: Mesh) -> Tuple[np.ndarray, np.ndarray]:
     return eigenvectors.T[idx], eigenvalues[idx]
 
 
-def skeletonize_mesh(mesh):
+def mesh_bbox_to_world_xyz_transform(mesh: Mesh) -> Transformation:
+    """Get a transform that aligns mesh principal bbox directions to world XYZ.
+
+    The longest principal direction is forced to align with ``+Z``. The other
+    two (shorter) directions are aligned with the world ``XY`` plane.
+
+    Notes
+    -----
+    For highly symmetric meshes (for example cubes), principal directions can
+    be non-unique, so equivalent valid alignments may exist.
+    """
+    axes, _ = principal_axes(mesh)
+
+    # Principal axes are sorted by descending variance: 0=longest.
+    z_axis = np.array(axes[0], dtype=float)
+    x_axis = np.array(axes[1], dtype=float)
+    ref_short = np.array(axes[2], dtype=float)
+
+    z_axis /= np.linalg.norm(z_axis)
+    if z_axis[2] < 0.0:
+        z_axis *= -1.0
+
+    # Re-orthogonalize x against z for numerical stability.
+    x_axis = x_axis - np.dot(x_axis, z_axis) * z_axis
+    x_norm = np.linalg.norm(x_axis)
+    if x_norm < 1e-12:
+        fallback = np.array([1.0, 0.0, 0.0])
+        if abs(np.dot(fallback, z_axis)) > 0.9:
+            fallback = np.array([0.0, 1.0, 0.0])
+        x_axis = fallback - np.dot(fallback, z_axis) * z_axis
+        x_norm = np.linalg.norm(x_axis)
+    x_axis /= x_norm
+
+    y_axis = np.cross(z_axis, x_axis)
+    y_axis /= np.linalg.norm(y_axis)
+
+    # Keep a deterministic orientation for the two short axes.
+    if np.dot(y_axis, ref_short) < 0.0:
+        x_axis *= -1.0
+        y_axis *= -1.0
+
+    centroid = centroid_points([mesh.vertex_coordinates(v) for v in mesh.vertices()])
+    source = Frame(Point(*centroid), Vector(*x_axis), Vector(*y_axis))
+    target = Frame.worldXY()
+    return Transformation.from_frame_to_frame(source, target)
+
+
+def skeletonize_mesh(mesh, graph=False):
     """Skeletonizes a mesh and returns a list of polylines representing the skeleton.
 
     Parameters
@@ -100,4 +150,29 @@ def skeletonize_mesh(mesh):
         polyline = Polyline([start_point, end_point])
         polylines.append(polyline)
 
+    if graph:
+        from graph_utils import graph_from_polylines
+        return graph_from_polylines(polylines)
+    
     return polylines
+
+
+def flip_mesh_top_bottom(mesh):
+    center = mesh.centroid()
+
+    # translation to origin
+    T1 = Translation.from_vector(Vector(*(-c for c in center)))
+
+    # 3. rotation: 180 degrees around Y axis
+    R = Rotation.from_axis_and_angle([0, 1, 0], 3.141592653589793, point=Point(0, 0, 0))
+
+    # 4. translate back
+    T2 = Translation.from_vector(Vector(*center))
+
+    # 5. combined transform
+    transform = T2 * R * T1
+
+    # apply to mesh
+    flipped_mesh = mesh.transformed(transform)
+
+    return flipped_mesh 
