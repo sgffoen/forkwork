@@ -1,0 +1,7 @@
+# Runtime
+compas>=2.0
+numpy>=1.21
+
+# Development / testing
+pytest>=7.0
+pytest-cov
