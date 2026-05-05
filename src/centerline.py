@@ -1,9 +1,10 @@
-from compas.geometry import Polyline
+from compas.geometry import Polyline, pca_numpy
 from compas.datastructures import Mesh
 import math
 import numpy as np
 
 from mesh_utils import principal_axes
+from compas_cgal.polylines import simplify_polyline
 
 
 def branch_direction(mesh):
@@ -24,3 +25,20 @@ def branch_direction(mesh):
     return main_axis
 
 
+def simplify_centerline(centerline, threshold=1.0):
+    """Simplify a centerline polyline using the Ramer-Douglas-Peucker algorithm.
+
+    Parameters
+    ----------
+    centerline : Polyline
+        The input centerline as a polyline.
+    threshold : float, optional
+        The distance threshold for simplification (default is 1.0).
+
+    Returns
+    -------
+    Polyline
+        The simplified centerline.
+    """
+    simplified_points = simplify_polyline(centerline.points, threshold)
+    return Polyline(simplified_points)

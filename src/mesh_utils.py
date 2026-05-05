@@ -16,9 +16,9 @@ import numpy as np
 
 from compas.datastructures import Mesh
 from compas_cgal.skeletonization import mesh_skeleton
+from compas_cgal.slicer import slice_mesh_planes
 from compas.geometry import (
     Frame,
-    Line,
     Plane,
     Point,
     Polyline,
@@ -155,6 +155,25 @@ def skeletonize_mesh(mesh, graph=False):
         return graph_from_polylines(polylines)
     
     return polylines
+
+
+def mesh_plane_contours(mesh: Mesh, planes: List[Plane]) -> List[Polyline]:
+    """Intersect a mesh with multiple planes and stitch the results into contours.
+
+    Parameters
+    ----------
+    mesh : :class:`compas.datastructures.Mesh`
+        Input mesh to slice.
+    planes : list of :class:`compas.geometry.Plane`
+        Section planes.
+
+    Returns
+    -------
+    list[:class:`compas.geometry.Polyline`]
+        Section contours produced by compas_cgal slicer for the given planes.
+    """
+    result = slice_mesh_planes(mesh, planes)
+    return [Polyline(points) for points in result if len(points) >= 2]
 
 
 def flip_mesh_top_bottom(mesh):
