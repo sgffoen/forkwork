@@ -321,6 +321,43 @@ class Branch:
             centerline, circles = self._tubular_growth_centerline(resolution=resolution)
             return centerline, circles
 
+    def bifurcation_centerline_stubs(self, resolution=30.0, method="growth"):
+        """Return only the bifurcation stubs of a bifurcation centerline.
+
+        A stub is the segment from the computed bifurcation point to the first
+        sampled contour center on each axis.
+
+        Parameters
+        ----------
+        resolution : float
+            Desired distance in mm between slicing planes used for centerline
+            extraction.
+        method : str
+            Centerline method to use: ``"growth"`` or ``"geometric"``.
+
+        Returns
+        -------
+        list[:class:`compas.geometry.Polyline`]
+            One 2-point polyline per available axis stub.
+        """
+        if not self.is_bifurcation:
+            return []
+
+        if method == "growth":
+            centerlines, _ = self._bifurcation_growth_centerline(resolution=resolution)
+        elif method == "geometric":
+            centerlines, _ = self._bifurcation_geometric_centerline(resolution=resolution)
+        else:
+            raise ValueError("method must be 'growth' or 'geometric'")
+
+        stubs = []
+        for polyline in centerlines:
+            points = list(polyline.points)
+            if len(points) >= 2:
+                stubs.append(Polyline([points[0], points[1]]))
+
+        return stubs
+
     def _bifurcation_geometric_centerline(self, resolution):
         """Compute the centerline of a bifurcation branch.
 
